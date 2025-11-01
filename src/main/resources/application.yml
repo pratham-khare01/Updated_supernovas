@@ -1,0 +1,71 @@
+server:
+  error:
+    whitelabel:
+      enabled: false
+spring:
+  application:
+    name: supernovae
+  profiles:
+    default: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  r2dbc:
+    url: ${DATABASE_URL_R2DBC}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+  flyway:
+    url: ${DATABASE_URL_JDBC}
+    user: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    locations: classpath:db/migration
+  cloud:
+    gateway:
+      routes:
+        # These routes forward all traffic to the Svelte kit development server, unless the route is api
+        - id: svelte-http
+          uri: http://localhost:5173
+          predicates:
+            - Path=/,/{segment:^(?!api).*}/**
+          filters:
+            - PreserveHostHeader=true
+
+        - id: svelte-ws
+          uri: ws://localhost:5173
+          predicates:
+            - Path=/,/{segment:^(?!api).*}/**
+          filters:
+            - PreserveHostHeader=true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  r2dbc:
+    url: ${DATABASE_URL_R2DBC_TEST}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+  flyway:
+    url: ${DATABASE_URL_JDBC_TEST}
+    user: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    locations: classpath:db/migration
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  r2dbc:
+    url: ${DATABASE_URL_R2DBC}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+  flyway:
+    url: ${DATABASE_URL_JDBC}
+    user: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+    locations: classpath:db/migration
